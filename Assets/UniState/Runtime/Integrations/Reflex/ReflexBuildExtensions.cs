@@ -96,7 +96,7 @@ namespace UniState
             {
                 throw new ArgumentException(
                     $"AddStateMachine<{stateMachineImplementation.Name}>: Type parameters must differ : " +
-                    "use AddStateMachine() where stateMachineImplementation implements stateMachineContract.\");");
+                    "use AddStateMachine() where stateMachineImplementation implements stateMachineContract.");
             }
 
             if (!stateMachineContract.IsAssignableFrom(stateMachineImplementation))

@@ -4,29 +4,56 @@ using Cysharp.Threading.Tasks;
 
 namespace UniState
 {
+    /// <summary>
+    /// A high-performance state machine implementation for Unity.
+    /// Provides asynchronous state transitions with support for dependency injection and error handling.
+    /// </summary>
     public class StateMachine : IStateMachine
     {
         private LimitedStack<StateTransitionInfo> _history;
         private IStateTransitionFactory _transitionFactory;
 
+        /// <summary>
+        /// Gets a value indicating whether the state machine is currently executing.
+        /// </summary>
         public bool IsExecuting => _isExecuting;
+        
+        /// <summary>
+        /// Gets the maximum number of states to keep in the transition history.
+        /// Override this property to customize the history size.
+        /// </summary>
         protected virtual int MaxHistorySize => 15;
 
         private bool _isExecuting = false;
 
+        /// <summary>
+        /// Sets the type resolver used for dependency injection.
+        /// Must be called before executing any states.
+        /// </summary>
+        /// <param name="resolver">The type resolver to use for creating states and dependencies.</param>
+        /// <exception cref="ArgumentNullException">Thrown when resolver is null.</exception>
         public virtual void SetResolver(ITypeResolver resolver)
         {
+            if (resolver == null)
+                throw new ArgumentNullException(nameof(resolver));
+            
             _transitionFactory = new StateTransitionFactory(resolver);
         }
 
         public virtual async UniTask Execute<TState>(CancellationToken token) where TState : class, IState<EmptyPayload>
         {
+            if (_transitionFactory == null)
+                throw new InvalidOperationException("SetResolver must be called before Execute");
+            
             await ExecuteInternal(_transitionFactory.CreateStateTransition<TState>(), token);
         }
 
         public virtual async UniTask Execute<TState, TPayload>(TPayload payload, CancellationToken token)
             where TState : class, IState<TPayload>
         {
+            if (_transitionFactory == null)
+                throw new InvalidOperationException("SetResolver must be called before Execute");
+            
             await ExecuteInternal(_transitionFactory.CreateStateTransition<TState, TPayload>(payload), token);
         }
 
